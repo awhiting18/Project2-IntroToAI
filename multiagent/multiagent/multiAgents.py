@@ -237,7 +237,137 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # setting up some basic variables for myself
+        numAgents = gameState.getNumAgents() - 1
+        maxDepth = self.depth
+        currentDepth = 0
+
+        # I need to define a method here that will allow me to make recursive calls to it in order to implement the algorithm
+        def minimaxWithPruning(gameState, depth, agentIndex, alpha, beta):
+            if(gameState.isWin() or gameState.isLose() or depth == maxDepth):
+                return self.evaluationFunction(gameState)
+
+            if(agentIndex == 0):
+                # maximizing agent pseudocode
+                # initialize V to neg inf
+                # for each successor of state:
+                #   v = max (v, value(successor, alpha, beta))
+                #   if v > beta return v
+                #   alpha = max(alpha, v)
+                # return v
+
+                # initialize V to neg inf
+                bestV = -9999999999
+
+                # for each successor of state:
+                for action in gameState.getLegalActions(agentIndex):
+
+                    # getting successor to make the minimaxWithPruning call easier to read
+                    successor = gameState.generateSuccessor(
+                        agentIndex, action)
+
+                    # v = max (v, value(successor, alpha, beta))
+                    v = minimaxWithPruning(successor, depth, 1, alpha, beta)
+                    bestV = max(bestV, v)
+
+                    #   if v > beta return v
+                    if bestV > beta:
+                        return bestV
+
+                    # alpha = max(alpha, v)
+                    alpha = max(alpha, bestV)
+
+                # return v
+                return bestV
+            else:
+                # Minimizing agent pseudocode
+                # 1. initialize V to neg inf
+                # 2. for each successor of state:
+                # 3.   v = min (v, value(successor, alpha, beta))
+                # 4.   if v > beta return v
+                # 5.   beta = min(alpha, v)
+                # 6. return v
+
+                # 1. initialize V to neg inf
+                bestV = 9999999999
+
+                # 2. for each successor of state:
+                for action in gameState.getLegalActions(agentIndex):
+
+                    # getting successor to make the minimaxWithPruning call easier to read
+                    successor = gameState.generateSuccessor(
+                        agentIndex, action)
+
+                    # Checking to see if all adversarial agents have gone
+                    if(agentIndex < numAgents):
+
+                        # 3.   v = min (v, value(successor, alpha, beta))
+                        v = minimaxWithPruning(
+                            successor, depth, agentIndex + 1, alpha, beta)
+                        bestV = min(bestV, v)
+
+                        # 4. if v > beta return v
+                        if bestV < alpha:
+                            return bestV
+
+                        # 5.   beta = min(alpha, v)
+                        beta = min(beta, bestV)
+                    else:
+                        if(agentIndex == numAgents):
+
+                            # setting new depth to make minimax with pruning call easier to read
+                            newDepth = depth + 1
+
+                            # 3.   v = min (v, value(successor, alpha, beta))
+                            v = minimaxWithPruning(
+                                successor, newDepth, 0, alpha, beta)
+                            bestV = min(bestV, v)
+
+                            # 4. if v > beta return v
+                            if bestV < alpha:
+                                return bestV
+
+                            # 5.   beta = min(alpha, v)
+                            beta = min(beta, bestV)
+
+                # 6. return v
+                return bestV
+
+        # Now we need to apply the function to function to pacman :)
+        # maximizing agent pseudocode
+        # 1. initialize V to neg inf
+        # 2. for each successor of state:
+        # 3.   v = max (v, value(successor, alpha, beta))
+        # 4.   if v > beta return v
+        # 5.   alpha = max(alpha, v)
+        # 6. return v
+
+        # setting the actionToReturn variable to something random
+        actionToReturn = Directions.NORTH
+
+        # 1. initialize V to neg inf
+        maxUtility = -99999999
+        alpha = -999999999
+        beta = 999999999
+
+        # gettting the minimax with pruning values from each legal action for pacman(performing the maximize function on pacman)
+        # 2. for each successor of state:
+        for action in gameState.getLegalActions(0):
+            # 3.   v = max (v, value(successor, alpha, beta))
+            currentUtility = minimaxWithPruning(
+                gameState.generateSuccessor(0, action), currentDepth, 1, alpha, beta)
+            # checking to see if the current utility should be our max utility
+            if (currentUtility > maxUtility):
+                maxUtility = currentUtility
+                actionToReturn = action
+            # 4.   if v > beta return v
+            if (maxUtility > beta):
+                return maxUtility
+            # 5.   alpha = max(alpha, v)
+            alpha = max(maxUtility, alpha)
+
+        # 6. return v
+        return actionToReturn
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
@@ -253,7 +383,98 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        # setting up some basic variables for myself
+        numAgents = gameState.getNumAgents() - 1
+        maxDepth = self.depth
+        currentDepth = 0
+
+        # I need to define a method here that will allow me to make recursive calls to it in order to implement the algorithm
+        def expectimax(gameState, depth, agentIndex):
+            if(gameState.isWin() or gameState.isLose() or depth == maxDepth):
+                return self.evaluationFunction(gameState)
+
+            if(agentIndex == 0):
+                # Maximizing agent pseudocode from class
+                # 1. init v to -infinity
+                # 2. for each successor of state:
+                # 3.    v = max(v, value(successor))
+                # 4. return v
+
+                # 1. init v to -infinity
+                bestV = -9999999999
+
+                # 2. for each successor of state:
+                for action in gameState.getLegalActions(agentIndex):
+                    # 3.    v = max(v, value(successor))
+                    v = expectimax(gameState.generateSuccessor(
+                        agentIndex, action), depth, 1)
+                    bestV = max(bestV, v)
+                # 4. return v
+                return bestV
+            else:
+
+                # Expectimax agent pseudocode from class
+                # 1. init v to 0
+                # 2. for each successor of state:
+                # 3.    p = probability(successor)
+                # 4.    v += p * value(successor)
+                # 5. return v
+
+                # 1. init v to 0
+                bestV = 0
+
+                # I do this step a little out of order but that is because all of the probs
+                # are the same. If each leaf had a different prob then we would calculate that
+                # in the for loop instead of out of it.
+                # 3.    p = probability(successor)
+                totalLegalActions = float(
+                    len(gameState.getLegalActions(agentIndex)))
+                probability = 1 / totalLegalActions
+
+                # 2. for each successor of state:
+                for action in gameState.getLegalActions(agentIndex):
+
+                   # Checking to see if all adversarial agents have gone
+                    if(agentIndex < numAgents):
+
+                        # 4.    v += p * value(successor)
+                        v = expectimax(gameState.generateSuccessor(
+                            agentIndex, action), depth, agentIndex + 1)
+                        bestV += probability * v
+                    else:
+                        if(agentIndex == numAgents):
+
+                            # 4.    v += p * value(successor)
+                            v = expectimax(gameState.generateSuccessor(
+                                agentIndex, action), depth + 1, 0)
+                            bestV += probability * v
+                # 5. return v
+                return bestV
+
+        # Now we need to apply the function to function to pacman :)
+        # Maximizing agent pseudocode from class
+        # 1. init v to -infinity
+        # 2. for each successor of state:
+        # 3.    v = max(v, value(successor))
+        # 4. return v
+
+        # setting the actionToReturn variable to something random
+        actionToReturn = Directions.NORTH
+
+        # 1. init v to -infinity
+        maxUtility = -99999999
+
+        # 2. for each successor of state:
+        for action in gameState.getLegalActions(0):
+            currentUtility = expectimax(
+                gameState.generateSuccessor(0, action), currentDepth, 1)
+            # 3.    v = max(v, value(successor))
+            if (currentUtility > maxUtility):
+                maxUtility = currentUtility
+                actionToReturn = action
+        # 4. return v
+        return actionToReturn
 
 
 def betterEvaluationFunction(currentGameState):
