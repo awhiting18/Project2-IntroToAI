@@ -483,6 +483,7 @@ def betterEvaluationFunction(currentGameState):
     evaluation function (question 5).
 
     DESCRIPTION:
+    I used our above implementation of the eval function for reflex agent to help me make this one.
     Our evaluation function will take a few things into consideration. They are as follows:
 
     - Distance to closest piece of food
@@ -526,8 +527,8 @@ def betterEvaluationFunction(currentGameState):
     capsulesLeft = len(currentGameState.getCapsules())
     foodLeft = len(foodList)
     disToNearestFood = -5
-    distanceToNearestActiveGhost = 0
-    distanceToNearestScaredGhost = 0
+    distanceToNearestActiveGhost = -5
+    distanceToNearestScaredGhost = -5
 
     # separating the ghosts into two categories. If they have a scared timer then they are scared and if they don't then they are active
     for ghostState in currentGhostStates:
@@ -549,7 +550,7 @@ def betterEvaluationFunction(currentGameState):
     """Calculating the distance to the nearest active ghost"""
     for ghost_position in activeGhosts:
         if(ghost_position):
-            if(distanceToNearestActiveGhost == 0):
+            if(distanceToNearestActiveGhost == -5):
                 distanceToNearestActiveGhost == manhattanDistance(
                     pos, ghost_position)
             else:
@@ -561,7 +562,7 @@ def betterEvaluationFunction(currentGameState):
     """Calculating the distance to the nearest scared ghost"""
     for ghost_position in scaredGhosts:
         if(ghost_position):
-            if(distanceToNearestScaredGhost == 0):
+            if(distanceToNearestScaredGhost == -5):
                 distanceToNearestScaredGhost == manhattanDistance(
                     pos, ghost_position)
             else:
@@ -570,7 +571,7 @@ def betterEvaluationFunction(currentGameState):
                 if(currentGhostDistance < distanceToNearestScaredGhost):
                     distanceToNearestScaredGhost = currentGhostDistance
 
-    # Before we calculate the score we need to see if we are in a winning state or a losing state. If we are in a winning we return a number close to pos infinity
+    # Before we calculate the evalResult we need to see if we are in a winning state or a losing state. If we are in a winning we return a number close to pos infinity
     # If we are in a losing state we return a number close to neg infinity
     if currentGameState.isWin():
         return 99999999
@@ -579,11 +580,11 @@ def betterEvaluationFunction(currentGameState):
 
     # We know that there will be some food left because we are not in a win state if we make it down here
     # Because of that, we don't need to be worried about a divide by 0 error witht the food left.
-    score = currentGameState.getScore() + (1/float(disToNearestFood) + 1) + 1/(float(foodLeft) * 10) - \
+    evalResult = currentGameState.getScore() + (1/float(disToNearestFood) + 1) + 1/(float(foodLeft) * 10) - \
         (1/(float(distanceToNearestActiveGhost) + 1)) + \
         (1/(float(distanceToNearestScaredGhost) + 1)) + 1/(float(capsulesLeft) + 1)
 
-    return score
+    return evalResult
 
 
 # Abbreviation
