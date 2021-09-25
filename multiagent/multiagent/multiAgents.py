@@ -482,10 +482,108 @@ def betterEvaluationFunction(currentGameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION:
+    Our evaluation function will take a few things into consideration. They are as follows:
+
+    - Distance to closest piece of food
+    - Distance to closest active ghost
+    - Distance to closest scared ghost
+    - number of food pellets left
+    - number of big food pieces left
+    - Current game score
+
+    We will start with the current game score and add all of the positive things in the game 
+        (i.e., being closer to scared ghosts, being close to food pellets, having less food pellets, having less capsules(Our thinking is that the more capsules you eat the further along in the game you are)) 
+    and subtract the negative things like being closer to active ghosts.
+
+    To break the function down into parts:
+    currentGameState.getScore() +                       # This takes the current score and adds it as our base score to return
+
+    (1/float(disToNearestFood) + 1) +                   # We take the reciprocal of the distance to the nearest food but we add 1 to make sure we don't get a divide by 0 error. This makes the effect that the closer we are to food, the higher the score
+
+    1/(float(foodLeft) * 10) -                          # We take the reciprocal fo the food left because we don't want it to affect the score that much but also it is important to add it in there. Also this way the score goes up as the number of pellets goes down. 
+                                                        # the multiplication by 10 helps create a more dramatic change in scoring
+
+    (1/(float(distanceToNearestActiveGhost) + 1)) +     # The closer we are to an active ghost the more our score goes down. We also add 1 here to make sure we do not get a divide by 0 error.
+
+    (1/(float(distanceToNearestScaredGhost) + 1)) +     # The closer we are to a scared ghost the more our score goes up. We also add 1 here to make sure we do not get a divide by 0 error.
+
+    1/(float(capsulesLeft) + 1)                         # Our logic here is that the less capsules there are the closer you are too winning and it will direct pacman towards the ghosts that are scared. Again, we also add 1 here to make sure we do not get a divide by 0 error.
+
+
+
+
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pos = currentGameState.getPacmanPosition()
+    allFood = currentGameState.getFood()
+    currentGhostStates = currentGameState.getGhostStates()
+    activeGhosts = []
+    scaredGhosts = []
+    foodList = allFood.asList()
+
+    # getting the attributes for my eval function
+    capsulesLeft = len(currentGameState.getCapsules())
+    foodLeft = len(foodList)
+    disToNearestFood = -5
+    distanceToNearestActiveGhost = 0
+    distanceToNearestScaredGhost = 0
+
+    # separating the ghosts into two categories. If they have a scared timer then they are scared and if they don't then they are active
+    for ghostState in currentGhostStates:
+        if ghostState.scaredTimer > 0:
+            scaredGhosts.append(ghostState.getPosition())
+
+        else:
+            activeGhosts.append(ghostState.getPosition())
+
+    """Calculating the distance to the nearest piece of food"""
+    for food in foodList:
+        if(disToNearestFood == -5):
+            disToNearestFood = manhattanDistance(pos, food)
+        else:
+            currentFoodDistance = manhattanDistance(pos, food)
+            if(currentFoodDistance < disToNearestFood):
+                disToNearestFood = currentFoodDistance
+
+    """Calculating the distance to the nearest active ghost"""
+    for ghost_position in activeGhosts:
+        if(ghost_position):
+            if(distanceToNearestActiveGhost == 0):
+                distanceToNearestActiveGhost == manhattanDistance(
+                    pos, ghost_position)
+            else:
+                currentGhostDistance = manhattanDistance(
+                    pos, ghost_position)
+                if(currentGhostDistance < distanceToNearestActiveGhost):
+                    distanceToNearestActiveGhost = currentGhostDistance
+
+    """Calculating the distance to the nearest scared ghost"""
+    for ghost_position in scaredGhosts:
+        if(ghost_position):
+            if(distanceToNearestScaredGhost == 0):
+                distanceToNearestScaredGhost == manhattanDistance(
+                    pos, ghost_position)
+            else:
+                currentGhostDistance = manhattanDistance(
+                    pos, ghost_position)
+                if(currentGhostDistance < distanceToNearestScaredGhost):
+                    distanceToNearestScaredGhost = currentGhostDistance
+
+    # Before we calculate the score we need to see if we are in a winning state or a losing state. If we are in a winning we return a number close to pos infinity
+    # If we are in a losing state we return a number close to neg infinity
+    if currentGameState.isWin():
+        return 99999999
+    elif currentGameState.isLose():
+        return -99999999
+
+    # We know that there will be some food left because we are not in a win state if we make it down here
+    # Because of that, we don't need to be worried about a divide by 0 error witht the food left.
+    score = currentGameState.getScore() + (1/float(disToNearestFood) + 1) + 1/(float(foodLeft) * 10) - \
+        (1/(float(distanceToNearestActiveGhost) + 1)) + \
+        (1/(float(distanceToNearestScaredGhost) + 1)) + 1/(float(capsulesLeft) + 1)
+
+    return score
 
 
 # Abbreviation
